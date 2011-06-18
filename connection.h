@@ -20,7 +20,9 @@ struct connection
 void conn_create(struct connection* c);
 void conn_destroy(struct connection* c);
 void conn_connect(struct connection* c, const char* server, unsigned int port);
-void conn_read(struct connection* c);
+void conn_read(struct connection* c, char* to);
+
+void conn_pingpong(struct connection* c, char* msg);
 
 void CMD(struct connection* c, const char* cmd, const char* msg);
 void MSG(struct connection* c, const char* msg);

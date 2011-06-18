@@ -53,13 +53,30 @@ void conn_connect(struct connection* c, const char* server, unsigned int port)
    CMD(c, "USER", "qwermies qwermies * :Name goes here");
 }
 
-void conn_read(struct connection* c)
+void conn_read(struct connection* c, char* to)
 {
    char buf[4096];
    int n = recv(c->socketfd, buf, 4095, 0);
    buf[4096]=0;
    if(n<0) perror("Read");
-   printf("%s\n",buf);
+   strcpy(to, buf);
+}
+
+void conn_pingpong(struct connection* c, char* msg)
+{
+   char* pos = strstr(msg, "PING");
+   if(pos)
+   {
+      if(pos[1]=='I') pos[1]='O';
+      else
+      {
+	 printf("Invalid pingpong message.\n");
+	 exit(EXIT_FAILURE);
+      }
+      printf("Sent PONG message.\n");
+      MSG(c, pos);
+   }
+   else printf("Not a PING message.\n");
 }
 
 void CMD(struct connection* c, const char* cmd, const char* msg)
