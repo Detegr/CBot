@@ -1,0 +1,5 @@
+Irc bot in C. Just for fun.
+
+Features:
+	- Connection to IRC server.
+	- Raw IRC-protocol commands via private messages.

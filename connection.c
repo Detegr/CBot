@@ -80,7 +80,42 @@ void conn_parsemsgs(struct connection* c, char* msg, void (*func)(struct connect
    }
 }
 
-void conn_pingpong(struct connection* c, char* msg)
+void conn_execcmd(struct connection* c, char* msg)
+{
+   char* p = strstr(msg, " ");
+   if(p)
+   {
+      *p=0;
+      CMD(c, msg, ++p);
+      //printf("CMD: %s, TOKEN: %s\n", msg, p);
+   }
+}
+
+int conn_parsecmd(char* in, char* user, char* cmd, char* msg)
+{
+   if(in[0]!=':') return -1;
+
+   char* start = strstr(in, ":");
+   char* end = strstr(++start, ":");
+   if(start && end)
+   {
+      end++[-1]=0; // Null-terminate prefix.
+   
+      char* token = strtok(start, " ");
+      strcpy(user, token);
+   
+      token = strtok(NULL, " ");
+      strcpy(cmd, token);
+   
+      strcpy(msg, end);
+
+      *in=0;
+      return 0;
+   }
+   else return -1;
+}
+
+int conn_pingpong(struct connection* c, char* msg)
 {
    char* pos = strstr(msg, "PING");
    if(pos)
@@ -96,7 +131,9 @@ void conn_pingpong(struct connection* c, char* msg)
       }
       printf("%s\n", pos);
       MSG(c, pos);
+      return 0;
    }
+   return -1;
 }
 
 void CMD(struct connection* c, const char* cmd, const char* msg)

@@ -22,8 +22,10 @@ void conn_destroy(struct connection* c);
 void conn_connect(struct connection* c, const char* server, unsigned int port);
 void conn_read(struct connection* c, char* to);
 
-void conn_pingpong(struct connection* c, char* msg);
+int conn_pingpong(struct connection* c, char* msg);
 void conn_parsemsgs(struct connection* c, char* msg, void (*func)(struct connection*, char*));
+void conn_execcmd(struct connection* c, char* msg);
+int conn_parsecmd(char* in, char* user, char* cmd, char* msg);
 
 void CMD(struct connection* c, const char* cmd, const char* msg);
 void MSG(struct connection* c, const char* msg);

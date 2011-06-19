@@ -4,7 +4,21 @@
 void parsefunc(struct connection* c, char* msg)
 {
    printf("S> %s <E\n", msg);
-   conn_pingpong(c, msg);
+   if(conn_pingpong(c, msg)<0)
+   {
+      /*
+       * TODO: Adjust sizes to something less stupid.
+       */
+      char user[256];
+      char cmd[256];
+      char message[256];
+
+      if(conn_parsecmd(msg, user, cmd, message)==0)
+      {
+	 printf("USER: %s\nCMD: %s\nMSG: %s\n", user, cmd, message);
+	 if(strcmp(cmd, "PRIVMSG")==0) conn_execcmd(c, message);
+      }
+   }
 }
 
 int main()
