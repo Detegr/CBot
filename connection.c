@@ -156,16 +156,3 @@ void MSG(struct connection* c, const char* msg)
    concat(tmp, 2, msg, "\r\n");
    send(c->socketfd, tmp, strlen(tmp), 0);
 }
-
-void PRIVMSG(struct connection* c, const char* to, const char* msg)
-{
-   int slen=strlen(msg);
-   int tolen=strlen(to);
-   
-   char tmp[slen+tolen+10];
-   tmp[0]=0;
-   concat(tmp, 4, "PRIVMSG ", to, ": ", msg);
-
-   MSG(c, tmp);
-}
-
