@@ -4,6 +4,9 @@
 #include "connection.h"
 #include "utils.h"
 
+#define BOT_NAME       "qwermies"
+#define BOT_REALNAME   "Name goes here"
+
 void conn_create(struct connection* c)
 {
    c->socketfd=0;
@@ -49,17 +52,32 @@ void conn_connect(struct connection* c, const char* server, unsigned int port)
    }
    c->initialized=1;
    printf("Got connection!\n");
-   CMD(c, "NICK", "qwermies");
-   CMD(c, "USER", "qwermies qwermies * :Name goes here");
+   CMD(c, "NICK", BOT_NAME);
+   char name[64]; *name=0;
+   concat(name, 5, BOT_NAME, " ", BOT_NAME, " * :", BOT_REALNAME);
+   CMD(c, "USER", name);
 }
 
 void conn_read(struct connection* c, char* to)
 {
    char buf[4096];
-   int n = recv(c->socketfd, buf, 4095, 0);
-   buf[4096]=0;
+   memset(buf, 0, sizeof(buf)); // Clear buffer just in case.
+   int n = recv(c->socketfd, buf, sizeof(buf), 0);
    if(n<0) perror("Read");
+
+   // Get rid of \r\n line endings.
+   for(unsigned int i=0; i<sizeof(buf); ++i) if(buf[i]=='\r' && buf[i+1]=='\n') buf[i]='\n';
    strcpy(to, buf);
+}
+
+void conn_parsemsgs(struct connection* c, char* msg, void (*func)(struct connection*, char*))
+{
+   char* cmd = strtok(msg, "\n");
+   while(cmd)
+   {
+      func(c, cmd);
+      cmd=strtok(NULL, "\n");
+   }
 }
 
 void conn_pingpong(struct connection* c, char* msg)
@@ -67,16 +85,18 @@ void conn_pingpong(struct connection* c, char* msg)
    char* pos = strstr(msg, "PING");
    if(pos)
    {
+      /*
+       * TODO: Line that includes PING anywhere will trigger this.
+       */
       if(pos[1]=='I') pos[1]='O';
       else
       {
 	 printf("Invalid pingpong message.\n");
 	 exit(EXIT_FAILURE);
       }
-      printf("Sent PONG message.\n");
+      printf("%s\n", pos);
       MSG(c, pos);
    }
-   else printf("Not a PING message.\n");
 }
 
 void CMD(struct connection* c, const char* cmd, const char* msg)
