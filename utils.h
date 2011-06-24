@@ -1,13 +1,18 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdarg.h>
-static void concat(char* to, int n, ...)
+struct config
 {
-   va_list vl;
-   va_start(vl, n);
-   for(int i=0; i<n; ++i) strcat(to, va_arg(vl, const char*));
-   va_end(vl);
-}
+   char** authorized_users;
+   char* bot_name;
+   char* bot_realname;
+};
+
+void config_create();
+void config_get(struct config* config);
+void config_adduser(struct config* config, const char* user);
+int config_writeuser(const char* user);
+void config_destroy(struct config* config);
+void concat(char* to, int n, ...);
 
 #endif
