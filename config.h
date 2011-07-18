@@ -11,6 +11,8 @@ struct config
 int		config_create(struct config* c);
 int		config_createdefault();
 int		config_destroy(struct config* c);
+
 const char** 	config_getvalues(struct config* c, const char* variable);
+int		config_write(struct config *c, const char* to);
 
 #endif

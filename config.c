@@ -82,7 +82,7 @@ int config_create(struct config* c)
 						free(c->values[i]);
 					}
 					free(c->variables);
-					free(c->values); // FIX!!
+					free(c->values);
 					fclose(fp);
 					free(buf_fallback);
 					return -1;
@@ -142,21 +142,27 @@ int config_createdefault()
 	fclose(fp);
 	return 0;
 }
-/*
-int config_write(struct config* c, const char* variable, const char* value)
-{
-	for(int i=0; i<c->entries; ++i)
-	{
-		if(strcmp(variable, c->variables[i])==0)
-		{
-			if(strcmp(value, c->values[i])==0)
-			{
 
-			}
+int config_write(struct config* c, const char* to)
+{
+	FILE* fp = fopen(to, "w");
+	if(fp)
+	{
+		for(int i=0; i<c->entries; ++i)
+		{
+			fprintf(fp, "%s=", c->variables[i]);
+			for(int j=0; c->values[i][j]; ++j) j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
+			fprintf(fp, "\n");
 		}
+		return 0;
+	}
+	else
+	{
+		fprintf(stderr, "CONFIG: Cannot open %s to write.\n", to);
+		return -1;
 	}
 }
-*/
+
 const char** config_getvalues(struct config* c, const char* variable)
 {
 	// Assuming that c is initialized.

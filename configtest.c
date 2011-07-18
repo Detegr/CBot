@@ -8,6 +8,7 @@ int main()
 	{
 		const char** users = config_getvalues(&c, "authorized_users");
 		for(int i=0; users[i]; ++i) printf("Authorized user #%d: %s\n", i+1, users[i]);
+		config_write(&c, "config_writetest.conf");
 		if(config_destroy(&c)==0) printf("Config destroyed successfully.\n");
 	}
 }
