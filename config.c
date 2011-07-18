@@ -155,9 +155,12 @@ int config_write(struct config* c, const char* to)
 	{
 		for(int i=0; i<c->entries; ++i)
 		{
-			fprintf(fp, "%s=", c->variables[i]);
-			for(int j=0; c->values[i][j]; ++j) j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
-			fprintf(fp, "\n");
+			if(c->variables[i] && c->values[i])
+			{
+				fprintf(fp, "%s=", c->variables[i]);
+				for(int j=0; c->values[i][j]; ++j) j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
+				fprintf(fp, "\n");
+			}
 		}
 		return 0;
 	}
@@ -168,9 +171,48 @@ int config_write(struct config* c, const char* to)
 	}
 }
 
+int config_add(struct config* c, const char* variable, const char** values)
+{
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(!c->variables[i])
+		{
+			c->variables[i] = (char*)calloc(strlen(variable)+1, sizeof(char));
+			for(int j=0; variable[j]; ++j) c->variables[i][j]=variable[j];
+
+			// Assuming that no hand made modifications has been done to c->values.
+			int values_size=0;
+			while(values[values_size]) ++values_size;
+
+			c->values[i] = (char**)calloc(values_size+1, sizeof(char*));
+			for(int j=0; j<values_size; ++j)
+			{
+				c->values[i][j] = calloc(strlen(values[j]), sizeof(char));
+				for(int z=0; values[j][z]; ++z) c->values[i][j][z] = values[j][z];
+			}
+			c->values[i][values_size]=NULL;
+			return 0;
+		}
+	}
+	
+	// No space for new pair. Must reallocate the whole thing.
+	char** new_var = calloc(c->entries*2, sizeof(char*));
+	for(int i=0; i<c->entries; ++i) new_var[i] = c->variables[i];
+	free(c->variables);
+	c->variables = new_var;
+
+	char*** new_val = calloc(c->entries*2, sizeof(char**));
+	for(int i=0; i<c->entries; ++i) new_val[i] = c->values[i];
+	free(c->values);
+	c->values = new_val;
+
+	c->entries*=2;
+	if(config_add(c, variable, values)==0) return 0;
+	else return -1;
+}
+
 const char** config_getvalues(struct config* c, const char* variable)
 {
-	// Assuming that c is initialized.
 	for(int i=0; i<c->entries; ++i)
 	{
 		if(strcmp(variable, c->variables[i])==0)
@@ -185,20 +227,31 @@ int config_destroy(struct config* c)
 {
 	for(int i=0;i<c->entries;++i)
 	{
-		free(c->variables[i]);
-		c->variables[i]=NULL;
+		if(c->variables[i])
+		{
+			free(c->variables[i]);
+			c->variables[i]=NULL;
+		}
 
 		int j=0;
-		for(;c->values[i][j]; ++j)
+		if(c->values[i])
 		{
-			free(c->values[i][j]);
-			c->values[i][j]=NULL;
+			for(;c->values[i][j]; ++j)
+			{
+				if(c->values[i][j])
+				{
+					free(c->values[i][j]);
+					c->values[i][j]=NULL;
+				}
+			}
+			if(c->values[i][j])
+			{
+				free(c->values[i][j]);
+				c->values[i][j]=NULL;
+			}
+			free(c->values[i]);
+			c->values[i]=NULL;
 		}
-		free(c->values[i][j]);
-		c->values[i][j]=NULL;
-
-		free(c->values[i]);
-		c->values[i]=NULL;
 	}
 	free(c->variables);
 	c->variables=NULL;
