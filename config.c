@@ -57,8 +57,8 @@ int config_create(struct config* c)
 		}
 		c->entries = lines;
 	
-		c->variables = (char**)malloc(lines*sizeof(char*));
-		c->values = (char***)malloc(lines*sizeof(char**));
+		c->variables = (char**)calloc(lines, sizeof(char*));
+		c->values = (char***)calloc(lines, sizeof(char**));
 
 		if(c->variables && c->values)
 		{
@@ -88,7 +88,7 @@ int config_create(struct config* c)
 					return -1;
 				}
 
-				c->variables[entrynum] = (char*)malloc(separator-buf+1); // +1 for null-byte.
+				c->variables[entrynum] = (char*)calloc(separator-buf+1, sizeof(char)); // +1 for null-byte.
 				char* tmp = buf;
 				for(int i=0; tmp!=separator; ++tmp,++i) c->variables[entrynum][i]=*tmp;
 				tmp = separator+1;
@@ -100,7 +100,7 @@ int config_create(struct config* c)
 						++numof_values;
 					}
 				}
-				c->values[entrynum] = (char**)malloc((numof_values*sizeof(char*))+sizeof(char*)); // +1 for null array. (For easy iteration)
+				c->values[entrynum] = (char**)calloc(numof_values+1, sizeof(char*)); // +1 for null array. (For easy iteration)
 				tmp=separator+1;
 
 				int values_done=0;
@@ -108,12 +108,12 @@ int config_create(struct config* c)
 				{
 					char* tmp2=tmp;
 					while(*tmp2!=',' && *tmp2!='\n') ++tmp2;
-					c->values[entrynum][values_done] = (char*)malloc(tmp2-tmp+1); // +1 for null-byte.
+					c->values[entrynum][values_done] = (char*)calloc(tmp2-tmp+1, sizeof(char)); // +1 for null-byte.
 					for(int i=0; tmp!=tmp2; ++i, ++tmp) c->values[entrynum][values_done][i] = *tmp;
 					++values_done;
 					tmp=tmp2+1;
 				}
-				c->values[entrynum][values_done] = (char*)malloc(1);
+				c->values[entrynum][values_done] = (char*)calloc(1,sizeof(char));
 				c->values[entrynum][values_done] = NULL;
 				bytes_handled+=eol-buf+1;
 				buf=eol+1;
