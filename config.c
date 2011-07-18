@@ -33,7 +33,7 @@ int config_create(struct config* c)
 			fclose(fp);
 			return -1;
 		}
-		int bytes_read = fread(buf, 1, filesize, fp);
+		unsigned int bytes_read = fread(buf, 1, filesize, fp);
 		if(bytes_read!=filesize)
 		{
 			fprintf(stderr,"CONFIG: Reading failed.\n");
@@ -76,7 +76,7 @@ int config_create(struct config* c)
 				if(separator==eol)
 				{
 					fprintf(stderr, "CONFIG: File invalid. Must separate variables and values with '='\n");
-					for(int i=0; i<entrynum; ++i)
+					for(unsigned int i=0; i<entrynum; ++i)
 					{
 						free(c->variables[i]);
 						free(c->values[i]);
@@ -130,6 +130,11 @@ int config_create(struct config* c)
 			fclose(fp);
 			return -1;
 		}
+	}
+	else
+	{
+		fprintf(stderr, "CONFIG: Fatal error\n");
+		return -1;
 	}
 }
 
