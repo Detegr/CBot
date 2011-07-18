@@ -106,6 +106,7 @@ int config_create(struct config* c)
 				int values_done=0;
 				while(values_done != numof_values)
 				{
+					while(*tmp==' ') ++tmp;
 					char* tmp2=tmp;
 					while(*tmp2!=',' && *tmp2!='\n') ++tmp2;
 					c->values[entrynum][values_done] = (char*)calloc(tmp2-tmp+1, sizeof(char)); // +1 for null-byte.
@@ -113,12 +114,13 @@ int config_create(struct config* c)
 					++values_done;
 					tmp=tmp2+1;
 				}
-				c->values[entrynum][values_done] = (char*)calloc(1,sizeof(char));
 				c->values[entrynum][values_done] = NULL;
 				bytes_handled+=eol-buf+1;
 				buf=eol+1;
 				++entrynum;
 			}
+			free(buf_fallback);
+			fclose(fp);
 			return 0;
 		}
 		else
@@ -191,6 +193,7 @@ int config_destroy(struct config* c)
 	c->variables=NULL;
 	free(c->values);
 	c->values=NULL;
+	c->entries=0;
 	if(!c->variables && !c->values) return 0;
 	else return -1;
 }
