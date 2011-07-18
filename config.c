@@ -58,15 +58,17 @@ int config_create(struct config* c)
 		c->entries = lines;
 	
 		c->variables = (char**)malloc(lines*sizeof(char*));
-		c->values = (char**)malloc(lines*sizeof(char*));
+		c->values = (char***)malloc(lines*sizeof(char**));
 
 		if(c->variables && c->values)
 		{
+			int numof_values;
 			char* eol;
 			char* separator;
 
 			while(bytes_handled<bytes_read)
 			{
+				numof_values=1;
 				eol=buf;
 				while(*eol!='\n') ++eol;
 				separator=buf;
@@ -80,22 +82,44 @@ int config_create(struct config* c)
 						free(c->values[i]);
 					}
 					free(c->variables);
-					free(c->values);
+					free(c->values); // FIX!!
 					fclose(fp);
 					free(buf_fallback);
 					return -1;
 				}
 
-				c->variables[entrynum] = (char*)malloc(separator-buf);
-				c->values[entrynum] = (char*)malloc(eol-separator);
+				c->variables[entrynum] = (char*)malloc(separator-buf+1); // +1 for null-byte.
 				char* tmp = buf;
 				for(int i=0; tmp!=separator; ++tmp,++i) c->variables[entrynum][i]=*tmp;
 				tmp = separator+1;
-				for(int i=0; tmp!=eol; ++tmp,++i) c->values[entrynum][i]=*tmp;
+				for(int i=0; tmp!=eol; ++tmp,++i)
+				{
+					if(*tmp==',')
+					{
+						while(*tmp==',') ++tmp;
+						++numof_values;
+					}
+				}
+				c->values[entrynum] = (char**)malloc((numof_values*sizeof(char*))+sizeof(char*)); // +1 for null array. (For easy iteration)
+				tmp=separator+1;
+
+				int values_done=0;
+				while(values_done != numof_values)
+				{
+					char* tmp2=tmp;
+					while(*tmp2!=',' && *tmp2!='\n') ++tmp2;
+					c->values[entrynum][values_done] = (char*)malloc(tmp2-tmp+1); // +1 for null-byte.
+					for(int i=0; tmp!=tmp2; ++i, ++tmp) c->values[entrynum][values_done][i] = *tmp;
+					++values_done;
+					tmp=tmp2+1;
+				}
+				c->values[entrynum][values_done] = (char*)malloc(1);
+				c->values[entrynum][values_done] = NULL;
 				bytes_handled+=eol-buf+1;
 				buf=eol+1;
 				++entrynum;
 			}
+			return 0;
 		}
 		else
 		{
@@ -112,19 +136,33 @@ int config_createdefault()
 	FILE* fp = fopen("config.conf", "w");
 	if(!fp) return -1;
 
-	fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=\n", fp);
+	fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=DUMMYUSER1,DUMMYUSER2,DUMMYUSER3\n", fp);
 	fclose(fp);
 	return 0;
 }
+/*
+int config_write(struct config* c, const char* variable, const char* value)
+{
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(strcmp(variable, c->variables[i])==0)
+		{
+			if(strcmp(value, c->values[i])==0)
+			{
 
-const char* config_getvalue(struct config* c, const char* variable)
+			}
+		}
+	}
+}
+*/
+const char** config_getvalues(struct config* c, const char* variable)
 {
 	// Assuming that c is initialized.
 	for(int i=0; i<c->entries; ++i)
 	{
 		if(strcmp(variable, c->variables[i])==0)
 		{
-			return c->values[i];
+			return (const char**)c->values[i];
 		}
 	}
 	return NULL;
@@ -136,6 +174,16 @@ int config_destroy(struct config* c)
 	{
 		free(c->variables[i]);
 		c->variables[i]=NULL;
+
+		int j=0;
+		for(;c->values[i][j]; ++j)
+		{
+			free(c->values[i][j]);
+			c->values[i][j]=NULL;
+		}
+		free(c->values[i][j]);
+		c->values[i][j]=NULL;
+
 		free(c->values[i]);
 		c->values[i]=NULL;
 	}

@@ -5,12 +5,12 @@ struct config
 {
 	int		entries;
 	char**		variables;
-	char**		values;
+	char***		values;
 };
 
 int		config_create(struct config* c);
 int		config_createdefault();
 int		config_destroy(struct config* c);
-const char* 	config_getvalue(struct config* c, const char* variable);
+const char** 	config_getvalues(struct config* c, const char* variable);
 
 #endif
