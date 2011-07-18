@@ -8,8 +8,9 @@ struct config
 	char**		values;
 };
 
-int config_create(struct config* c);
-int config_load(struct config* c, const char* file);
-int config_destroy(struct config* c);
+int		config_create(struct config* c);
+int		config_createdefault();
+int		config_destroy(struct config* c);
+const char* 	config_getvalue(struct config* c, const char* variable);
 
 #endif

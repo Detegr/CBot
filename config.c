@@ -1,27 +1,14 @@
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int config_create(struct config* c, unsigned int entries)
-{
-}
-
-int config_createdefault()
-{
-	FILE* fp = fopen("config.conf", "w");
-	if(!fp) return -1;
-
-	fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=\n", fp);
-	fclose(fp);
-	return 0;
-}
-
-int config_load(struct config* c, const char* file)
+int config_create(struct config* c)
 {
 	FILE* fp = fopen("config.conf", "r");
 	if(!fp)
 	{
-		fprintf("CONFIG: File not found, creating...");
+		printf("CONFIG: File not found, creating...");
 		config_createdefault();
 		printf("DONE!\n");
 		fp = fopen("config.conf", "r");
@@ -32,38 +19,40 @@ int config_load(struct config* c, const char* file)
 	if(fp)
 	{
 		char* buf;
+		char* buf_fallback;
 		long filesize;
 		fseek(fp, 0, SEEK_END);
 		filesize = ftell(fp);
 		rewind(fp);
 
 		buf=(char*)malloc(filesize*sizeof(char));
+		buf_fallback=buf;
 		if(!buf)
 		{
-			fprintf(stderr,"CONFIG: Allocation failed.");
+			fprintf(stderr,"CONFIG: Allocation failed.\n");
 			fclose(fp);
 			return -1;
 		}
-		int readbytes = fread(buf, 1, filesize, fp);
-		if(readbytes!=filesize)
+		int bytes_read = fread(buf, 1, filesize, fp);
+		if(bytes_read!=filesize)
 		{
-			fprintf(stderr,"CONFIG: Reading failed.");
+			fprintf(stderr,"CONFIG: Reading failed.\n");
 			fclose(fp);
-			free(buf);
+			free(buf_fallback);
 			return -1;
 		}
 		int equs=0;
 		int lines=0;
 		for(int i=0; buf[i]; ++i)
 		{
-			if(buf[i]=="=") ++equs;
-			else if(buf[i]=="\n") ++lines;
+			if(buf[i]=='=') ++equs;
+			else if(buf[i]=='\n') ++lines;
 		}
 		if(lines!=equs)
 		{
-			fprintf(stderr, "CONFIG: Different number of lines and assigns.");
-			free(buf);
+			fprintf(stderr, "CONFIG: Different number of lines and assigns.\n");
 			fclose(fp);
+			free(buf_fallback);
 			return -1;
 		}
 		c->entries = lines;
@@ -76,51 +65,84 @@ int config_load(struct config* c, const char* file)
 			char* eol;
 			char* separator;
 
-			while(bytes_handled<bytesread)
+			while(bytes_handled<bytes_read)
 			{
 				eol=buf;
-				while(*eol!="\n") ++eol;
+				while(*eol!='\n') ++eol;
 				separator=buf;
-				while(*separator!="=" && separator!=eol) ++variable;
+				while(*separator!='=' && separator!=eol) ++separator;
 				if(separator==eol)
 				{
-					fprintf(stderr, "CONFIG: File invalid. Must separate variables and values with '='");
-					free(buf);
+					fprintf(stderr, "CONFIG: File invalid. Must separate variables and values with '='\n");
+					for(int i=0; i<entrynum; ++i)
+					{
+						free(c->variables[i]);
+						free(c->values[i]);
+					}
+					free(c->variables);
+					free(c->values);
 					fclose(fp);
-					exit(EXIT_FAILURE);
+					free(buf_fallback);
+					return -1;
 				}
 
 				c->variables[entrynum] = (char*)malloc(separator-buf);
 				c->values[entrynum] = (char*)malloc(eol-separator);
-				for(int i=0,char* tmp=buf; tmp!=separator; ++tmp,++i) tmp[i]=c->variables[entrynum][i];
-				for(int i=0,char* tmp=separator; tmp!=eol; ++tmp,++i) tmp[i]=c->values[entrynum][i];
-				bytes_handled+=(eol-buf);
+				char* tmp = buf;
+				for(int i=0; tmp!=separator; ++tmp,++i) c->variables[entrynum][i]=*tmp;
+				tmp = separator+1;
+				for(int i=0; tmp!=eol; ++tmp,++i) c->values[entrynum][i]=*tmp;
+				bytes_handled+=eol-buf+1;
 				buf=eol+1;
 				++entrynum;
 			}
 		}
 		else
 		{
-			fprintf(stderr, "CONFIG: Allocation failed.");
-			free(buf);
+			fprintf(stderr, "CONFIG: Allocation failed.\n");
+			free(buf_fallback);
 			fclose(fp);
 			return -1;
 		}
 	}
 }
 
-int config_destroy(struct config* c)
+int config_createdefault()
 {
-	if(c->loaded)
+	FILE* fp = fopen("config.conf", "w");
+	if(!fp) return -1;
+
+	fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=\n", fp);
+	fclose(fp);
+	return 0;
+}
+
+const char* config_getvalue(struct config* c, const char* variable)
+{
+	// Assuming that c is initialized.
+	for(int i=0; i<c->entries; ++i)
 	{
-		for(int i=0;i<entries;++i)
+		if(strcmp(variable, c->variables[i])==0)
 		{
-			free(variables[i]);
-			free(values[i]);
+			return c->values[i];
 		}
 	}
-	free(variables);
-	free(values);
-	if(!variables && !values) return 0;
+	return NULL;
+}
+
+int config_destroy(struct config* c)
+{
+	for(int i=0;i<c->entries;++i)
+	{
+		free(c->variables[i]);
+		c->variables[i]=NULL;
+		free(c->values[i]);
+		c->values[i]=NULL;
+	}
+	free(c->variables);
+	c->variables=NULL;
+	free(c->values);
+	c->values=NULL;
+	if(!c->variables && !c->values) return 0;
 	else return -1;
 }

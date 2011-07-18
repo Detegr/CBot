@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "utils.h"
 #include <stdio.h>
 
 void parsefunc(struct connection* c, char* msg)
@@ -24,7 +25,12 @@ void parsefunc(struct connection* c, char* msg)
 int main()
 {
    struct connection c;
+   struct config conf;
+   
+   config_get(&conf);
+   config_writeuser("seppo");
 
+   /*
    conn_create(&c);
    conn_connect(&c, "irc.fi.quakenet.org", 6667);
    while(1)
@@ -34,4 +40,5 @@ int main()
       conn_parsemsgs(&c, buf, parsefunc);
    } 
    conn_destroy(&c);
+   */
 }
