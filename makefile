@@ -1,5 +1,5 @@
 CC=gcc
-FLAGS=-Wall -Wextra -std=c99 -ggdb
+FLAGS=-Wall -Wextra -std=c99 -ggdb -DDEBUG
 LIBS=
 EXECUTABLE=a.out
 

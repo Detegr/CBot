@@ -20,6 +20,6 @@ int		config_write(struct config *c, const char* to);
  *
  * @param values: Values-array needs to be null-terminated. {"first", "second", 0}
  */
-int		config_add(struct config* c, const char* variable, const char** values);
+int		config_add(struct config* c, const char* variable, char** values);
 
 #endif

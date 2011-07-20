@@ -158,10 +158,17 @@ int config_write(struct config* c, const char* to)
 			if(c->variables[i] && c->values[i])
 			{
 				fprintf(fp, "%s=", c->variables[i]);
-				for(int j=0; c->values[i][j]; ++j) j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
+				for(int j=0; c->values[i][j]; ++j)
+				{
+					#ifdef DEBUG
+						printf("DEBUG: Added %s under %s.\n", c->values[i][j], c->variables[i]);
+					#endif
+					j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
+				}
 				fprintf(fp, "\n");
 			}
 		}
+		fclose(fp);
 		return 0;
 	}
 	else
@@ -171,8 +178,62 @@ int config_write(struct config* c, const char* to)
 	}
 }
 
-int config_add(struct config* c, const char* variable, const char** values)
+int config_add(struct config* c, const char* variable, char** values)
 {
+	// Check if variable exists.
+	int index=-1;
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(c->variables[i] && strcmp(variable, c->variables[i])==0)
+		{
+			index = i;
+		}
+	}
+
+	if(index!=-1)
+	{
+		int values_size=0;
+		for(int j=0; c->values[index][j]; ++j)
+		{
+			++values_size;
+			for(int z=0; values[z]; ++z)
+			{
+				if(strcmp(c->values[index][j], values[z])==0)
+				{
+					#ifdef DEBUG
+						fprintf(stderr, "DEBUG: Value %s already exists under %s\n", values[z], variable);
+					#endif
+					for(int i=z; values[i]; ++i) values[i] = values[i+1];
+				}
+			}
+		}
+		// Conflicts resolved, allocate more space and copy the previous data.
+		char** new_val = (char**)calloc((values_size*2)+1, sizeof(char*)); // +1 because of the null-array.
+		int i=0;
+		for(;c->values[index][i]; ++i)
+		{
+			#ifdef DEBUG
+				printf("DEBUG: Copied %s from slot %d to new config, slot %d\n", c->values[index][i], i, i);
+			#endif
+			new_val[i] = c->values[index][i];
+		}
+		for(int j=0;values[j]; ++i, ++j)
+		{
+			#ifdef DEBUG
+				printf("DEBUG: Copied %s from slot %d to new config, slot %d\n", values[j], j, i);
+			#endif
+			new_val[i] = (char*)calloc(strlen(values[j])+1, sizeof(char));
+			strcpy(new_val[i], values[j]);
+		}
+		new_val[i] = NULL;
+		
+		free(c->values[index]);
+		c->values[index]=new_val;
+
+		return 0;
+	}
+
+	// No existing values, add new to the config.
 	for(int i=0; i<c->entries; ++i)
 	{
 		if(!c->variables[i])
@@ -215,7 +276,7 @@ const char** config_getvalues(struct config* c, const char* variable)
 {
 	for(int i=0; i<c->entries; ++i)
 	{
-		if(strcmp(variable, c->variables[i])==0)
+		if(c->variables[i] && strcmp(variable, c->variables[i])==0)
 		{
 			return (const char**)c->values[i];
 		}
