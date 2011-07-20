@@ -16,10 +16,16 @@ const char** 	config_getvalues(struct config* c, const char* variable);
 int		config_write(struct config *c, const char* to);
 
 /*
- * config_add()
+ * config_addvalues()
  *
  * @param values: Values-array needs to be null-terminated. {"first", "second", 0}
+ *
  */
-int		config_add(struct config* c, const char* variable, char** values);
+int		config_addvalues(struct config* c, const char* variable, char** values);
+
+/*
+ * For adding single value. Simpler to use than config_addvalues()
+ */
+int		config_add(struct config* c, const char* variable, const char* value);
 
 #endif

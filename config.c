@@ -161,7 +161,7 @@ int config_write(struct config* c, const char* to)
 				for(int j=0; c->values[i][j]; ++j)
 				{
 					#ifdef DEBUG
-						printf("DEBUG: Added %s under %s.\n", c->values[i][j], c->variables[i]);
+						printf("DEBUG: Wrote %s under %s.\n", c->values[i][j], c->variables[i]);
 					#endif
 					j>0 ? fprintf(fp, ", %s", c->values[i][j]) : fprintf(fp, "%s", c->values[i][j]);
 				}
@@ -178,7 +178,13 @@ int config_write(struct config* c, const char* to)
 	}
 }
 
-int config_add(struct config* c, const char* variable, char** values)
+int config_add(struct config* c, const char* variable, const char* value)
+{
+	const char* values[2]={value, 0};
+	return config_addvalues(c, variable, (char**)values);
+}
+
+int config_addvalues(struct config* c, const char* variable, char** values)
 {
 	// Check if variable exists.
 	int index=-1;
@@ -268,7 +274,7 @@ int config_add(struct config* c, const char* variable, char** values)
 	c->values = new_val;
 
 	c->entries*=2;
-	if(config_add(c, variable, values)==0) return 0;
+	if(config_addvalues(c, variable, values)==0) return 0;
 	else return -1;
 }
 
@@ -288,36 +294,30 @@ int config_destroy(struct config* c)
 {
 	for(int i=0;i<c->entries;++i)
 	{
-		if(c->variables[i])
-		{
-			free(c->variables[i]);
-			c->variables[i]=NULL;
-		}
-
+		free(c->variables[i]);
+		c->variables[i]=NULL;
+		
 		int j=0;
 		if(c->values[i])
 		{
 			for(;c->values[i][j]; ++j)
 			{
-				if(c->values[i][j])
-				{
-					free(c->values[i][j]);
-					c->values[i][j]=NULL;
-				}
-			}
-			if(c->values[i][j])
-			{
 				free(c->values[i][j]);
 				c->values[i][j]=NULL;
 			}
+			free(c->values[i][j]);
+			c->values[i][j]=NULL;
+		
 			free(c->values[i]);
 			c->values[i]=NULL;
 		}
 	}
 	free(c->variables);
 	c->variables=NULL;
+
 	free(c->values);
 	c->values=NULL;
+
 	c->entries=0;
 	if(!c->variables && !c->values) return 0;
 	else return -1;
