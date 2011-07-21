@@ -1,3 +1,10 @@
+/*
+ * configtest.c
+ *
+ * Test file and example for config system usage.
+ *
+ */
+
 #include <stdio.h>
 #include "config.h"
 
@@ -19,4 +26,6 @@ int main()
 		config_write(&c, "config_writetest.conf");
 		if(config_destroy(&c)==0) printf("Config destroyed successfully.\n");
 	}
+
+	return 0;
 }
