@@ -102,7 +102,7 @@ int config_create(struct config* c)
 
 				c->variables[entrynum] = (char*)calloc(separator-buf+1, sizeof(char)); // +1 for null-byte.
 				char* tmp = buf;
-				for(int i=0; tmp!=separator; ++tmp,++i) c->variables[entrynum][i]=*tmp;
+				for(int i=0; tmp!=separator; ++tmp,++i) if(*tmp!=' ') c->variables[entrynum][i]=*tmp;
 				tmp = separator+1;
 				for(int i=0; tmp!=eol; ++tmp,++i)
 				{
