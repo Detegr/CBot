@@ -11,6 +11,7 @@ int main()
 		char* values[3] = {"second", "third", 0};
 		config_addvalues(&c, "testval", values);
 		config_add(&c, "config_add_single", "thisvalue");
+		config_delvar(&c, "authorized_users");
 		config_write(&c, "config_writetest.conf");
 		if(config_destroy(&c)==0) printf("Config destroyed successfully.\n");
 	}

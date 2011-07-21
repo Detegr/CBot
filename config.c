@@ -9,7 +9,16 @@ int config_create(struct config* c)
 	if(!fp)
 	{
 		printf("CONFIG: File not found, creating...");
-		config_createdefault();
+		{
+			FILE* fp = fopen("config.conf", "w");
+			if(!fp)
+			{
+				fprintf(stderr, "CONFIG: Could not create config file. Check permissions?\n");
+				return -1;
+			}
+			fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=DUMMYUSER1,DUMMYUSER2,DUMMYUSER3\n", fp);
+			fclose(fp);
+		}
 		printf("DONE!\n");
 		fp = fopen("config.conf", "r");
 	}
@@ -136,16 +145,6 @@ int config_create(struct config* c)
 		fprintf(stderr, "CONFIG: Fatal error\n");
 		return -1;
 	}
-}
-
-int config_createdefault()
-{
-	FILE* fp = fopen("config.conf", "w");
-	if(!fp) return -1;
-
-	fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=DUMMYUSER1,DUMMYUSER2,DUMMYUSER3\n", fp);
-	fclose(fp);
-	return 0;
 }
 
 int config_write(struct config* c, const char* to)
@@ -276,6 +275,29 @@ int config_addvalues(struct config* c, const char* variable, char** values)
 	c->entries*=2;
 	if(config_addvalues(c, variable, values)==0) return 0;
 	else return -1;
+}
+
+int config_delvar(struct config* c, const char* variable)
+{
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(c->variables[i] && strcmp(variable, c->variables[i])==0)
+		{
+			free(c->variables[i]);
+			for(int j=i; c->variables[j]; ++j) c->variables[j] = c->variables[j+1];
+			
+			int z=0;
+			for(; c->values[i][z]; ++z) free(c->values[i][z]);
+			free(c->values[i][z]);
+
+			free(c->values[i]);
+			for(int j=i; c->values[j]; ++j) c->values[j] = c->values[j+1];
+
+			--c->entries;
+			return 0;
+		}
+	}
+	return -1;
 }
 
 const char** config_getvalues(struct config* c, const char* variable)
