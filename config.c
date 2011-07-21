@@ -52,10 +52,13 @@ int config_create(struct config* c)
 		}
 		int equs=0;
 		int lines=0;
+
+		int newline=1;
 		for(int i=0; buf[i]; ++i)
 		{
-			if(buf[i]=='=') ++equs;
-			else if(buf[i]=='\n') ++lines;
+			// Newline-thingy allows values to contain character '='
+			if(buf[i]=='=' && newline) { ++equs; newline=0; }
+			else if(buf[i]=='\n') { ++lines; newline=1; }
 		}
 		if(lines!=equs)
 		{
