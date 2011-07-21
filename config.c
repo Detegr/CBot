@@ -1,3 +1,10 @@
+/*
+ * config.c
+ *
+ * Implementation of config system.
+ *
+ */
+
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>

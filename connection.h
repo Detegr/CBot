@@ -10,11 +10,11 @@
 
 struct connection
 {	
-   int socketfd;
-   struct hostent* host;
-   struct in_addr addr;
-   struct sockaddr_in server;
-   int initialized;
+	int socketfd;
+	struct hostent* host;
+	struct in_addr addr;
+	struct sockaddr_in server;
+	int initialized;
 };
 
 void conn_create(struct connection* c);
