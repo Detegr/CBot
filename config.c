@@ -180,10 +180,10 @@ int config_write(struct config* c, const char* to)
 int config_add(struct config* c, const char* variable, const char* value)
 {
 	const char* values[2]={value, 0};
-	return config_addvalues(c, variable, (char**)values);
+	return config_addmultiple(c, variable, (char**)values);
 }
 
-int config_addvalues(struct config* c, const char* variable, char** values)
+int config_addmultiple(struct config* c, const char* variable, char** values)
 {
 	// Check if variable exists.
 	int index=-1;
@@ -273,7 +273,7 @@ int config_addvalues(struct config* c, const char* variable, char** values)
 	c->values = new_val;
 
 	c->entries*=2;
-	if(config_addvalues(c, variable, values)==0) return 0;
+	if(config_addmultiple(c, variable, values)==0) return 0;
 	else return -1;
 }
 
@@ -294,13 +294,66 @@ int config_delvar(struct config* c, const char* variable)
 			for(int j=i; c->values[j]; ++j) c->values[j] = c->values[j+1];
 
 			--c->entries;
+			#ifdef DEBUG
+				printf("DEBUG: Deleted %s and its values.\n", variable);
+			#endif
 			return 0;
 		}
 	}
-	return -1;
+	return 1;
 }
 
-const char** config_getvalues(struct config* c, const char* variable)
+int config_delval(struct config* c, const char* variable, const char* value)
+{
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(c->variables[i] && strcmp(variable, c->variables[i])==0)
+		{
+			for(int j=0; c->values[i][j]; ++j)
+			{
+				if(strcmp(c->values[i][j], value)==0)
+				{
+					free(c->values[i][j]);
+					for(int z=j; c->values[i][z]; ++z) c->values[i][z]=c->values[i][z+1];
+					#ifdef DEBUG
+						printf("DEBUG: Deleted %s under %s.\n", value, variable);
+					#endif
+					return 0;
+				}
+			}
+		}
+	}
+	return 1;
+}
+
+int config_delvals(struct config* c, const char* variable, const char** values)
+{
+	int ret=1;
+	for(int i=0; i<c->entries; ++i)
+	{
+		if(c->variables[i] && strcmp(variable, c->variables[i])==0)
+		{
+			for(int j=0; c->values[i][j]; ++j)
+			{
+				for(int z=0; values[z]; ++z)
+				{
+					if(values[z] && strcmp(c->values[i][j], values[z])==0)
+					{
+						free(c->values[i][j]);
+						for(int x=j; c->values[i][x]; ++x) c->values[i][x]=c->values[i][x+1]; // Hooray for 4th for-loop.
+						#ifdef DEBUG
+							printf("DEBUG: Deleted %s under %s.\n", values[z], variable);
+						#endif
+						if(ret) ret=0;
+					}
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+const char** config_getvals(struct config* c, const char* variable)
 {
 	for(int i=0; i<c->entries; ++i)
 	{
