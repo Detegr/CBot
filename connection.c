@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "connection.h"
 #include "utils.h"
 #include "config.h"
@@ -23,7 +24,7 @@ void conn_destroy(struct connection* c)
 	}
 }
 
-void conn_connect(struct connection* c, const char* server, unsigned int port)
+int conn_connect(struct connection* c, const char* server, unsigned int port)
 {
 	c->socketfd = socket(AF_INET, SOCK_STREAM, 0);	
 	c->host = gethostbyname(server);
@@ -34,30 +35,26 @@ void conn_connect(struct connection* c, const char* server, unsigned int port)
 	int res = inet_pton(AF_INET, inet_ntoa(c->addr), &c->server.sin_addr);
 	if(res<0)
 	{
-		perror("First parameter is not a valid address");
+		fprintf(stderr, "CONNECTION: %s", strerror(errno));
 		close(c->socketfd);
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	else if(res==0)
 	{
-		perror("Second parameter is not an IP-address");
+		fprintf(stderr, "CONNECTION: %s", strerror(errno));
 		close(c->socketfd);
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	if(connect(c->socketfd, (struct sockaddr*)&c->server, sizeof(c->server)))
 	{
-		perror("Couldn't connect to server");
+		fprintf(stderr, "CONNECTION: %s", strerror(errno));
 		close(c->socketfd);
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	c->initialized=1;
 	printf("Got connection!\n");
-	const char** nick = config_getvals(&conf, "nick");
-	const char** realname = config_getvals(&conf, "realname");
-	CMD(c, "NICK", *nick);
-	char name[64]; *name=0;
-	concat(name, 5, *nick, " ", *nick, " * :", *realname);
-	CMD(c, "USER", name);
+	
+	return 0;
 }
 
 void conn_read(struct connection* c, char* to)
@@ -70,73 +67,6 @@ void conn_read(struct connection* c, char* to)
 	// Get rid of \r\n line endings.
 	for(unsigned int i=0; i<sizeof(buf); ++i) if(buf[i]=='\r' && buf[i+1]=='\n') buf[i]='\n';
 	strcpy(to, buf);
-}
-
-void conn_parsemsgs(struct connection* c, char* msg, void (*func)(struct connection*, char*))
-{
-	char* cmd = strtok(msg, "\n");
-	while(cmd)
-	{
-		func(c, cmd);
-		cmd=strtok(NULL, "\n");
-	}
-}
-
-void conn_execcmd(struct connection* c, char* msg)
-{
-	char* p = strstr(msg, " ");
-	if(p)
-	{
-		*p=0;
-		CMD(c, msg, ++p);
-		//printf("CMD: %s, TOKEN: %s\n", msg, p);
-	}
-}
-
-int conn_parsecmd(char* in, char* user, char* cmd, char* msg)
-{
-	/* TODO: Maybe get rid of strstr:s? */
-	if(in[0]!=':') return -1;
-
-	char* start = strstr(in, ":");
-	char* end = strstr(++start, ":");
-	if(start && end)
-	{
-		end++[-1]=0; // Null-terminate prefix.
-
-		char* token = strtok(start, " ");
-		strcpy(user, token);
-
-		token = strtok(NULL, " ");
-		strcpy(cmd, token);
-
-		strcpy(msg, end);
-
-		*in=0;
-		return 0;
-	}
-	else return -1;
-}
-
-int conn_pingpong(struct connection* c, char* msg)
-{
-	char* pos = strstr(msg, "PING");
-	if(pos)
-	{
-		/*
-		 * TODO: Line that includes PING anywhere will trigger this.
-		 */
-		if(pos[1]=='I') pos[1]='O';
-		else
-		{
-			printf("Invalid pingpong message.\n");
-			exit(EXIT_FAILURE);
-		}
-		printf("%s\n", pos);
-		MSG(c, pos);
-		return 0;
-	}
-	return -1;
 }
 
 void CMD(struct connection* c, const char* cmd, const char* msg)
