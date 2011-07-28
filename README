@@ -2,4 +2,13 @@ Irc bot in C. Just for fun.
 
 Features:
 	- Connection to IRC server.
-	- Raw IRC-protocol commands via private messages.
+	- Admin user recognition.
+	- !CBOT -prefixed commands:
+		* DIE  		 - Peacefully kills the bot.
+		* join <channel> - Joins to a channel.
+		
+	- If given command without !CBOT prefix, executes it as a raw irc-protocol command.
+
+
+License:
+All the code is licensed under WTFPL: http://sam.zoy.org/wtfpl/
