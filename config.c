@@ -23,7 +23,7 @@ int config_create(struct config* c)
 				fprintf(stderr, "CONFIG: Could not create config file. Check permissions?\n");
 				return -1;
 			}
-			fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=DUMMYUSER1,DUMMYUSER2,DUMMYUSER3\n", fp);
+			fputs("nick=CBOT_DEFAULT\nrealname=CBOT_DEFAULT\nauthorized_users=\n", fp);
 			fclose(fp);
 		}
 		printf("DONE!\n");

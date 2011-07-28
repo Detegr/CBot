@@ -22,8 +22,7 @@ void 	conn_destroy(struct connection* c);
 int 	conn_connect(struct connection* c, const char* server, unsigned int port);
 void 	conn_read(struct connection* c, char* to);
 
-void 	CMD(struct connection* c, const char* cmd, const char* msg);
+void 	CMD(struct connection* c, const char* cmd, const char* channel, const char* msg);
 void 	MSG(struct connection* c, const char* msg);
-void 	PRIVMSG(struct connection* c, const char* to, const char* msg);
 
 #endif

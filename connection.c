@@ -69,14 +69,20 @@ void conn_read(struct connection* c, char* to)
 	strcpy(to, buf);
 }
 
-void CMD(struct connection* c, const char* cmd, const char* msg)
+void CMD(struct connection* c, const char* cmd, const char* channel, const char* msg)
 {
 	int slen=strlen(msg);
 	int cmdlen=strlen(cmd);
+	int chnllen=0;
+	if(channel) chnllen=strlen(channel);
 
-	char tmp[cmdlen+slen+1];
+	char tmp[cmdlen+slen+chnllen+1];
 	tmp[0]=0;
-	concat(tmp, 3, cmd, " ", msg);
+	
+	if(channel) concat(tmp, 5, cmd, " ", channel, " :", msg);
+	else concat(tmp, 3, cmd, " ", msg);
+
+	printf("%s\n", tmp);
 
 	MSG(c, tmp);
 }

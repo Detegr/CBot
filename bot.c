@@ -2,6 +2,8 @@
 #include "utils.h"
 #include <stdio.h>
 
+extern int globalkill;
+
 int bot_create(struct bot* b, struct config* cfg, struct connection* c)
 {
 	b->conf = cfg;
@@ -19,10 +21,10 @@ int bot_connect(struct bot* b, const char* server, unsigned int port)
 		const char** nick = config_getvals(b->conf, "nick");
 		const char** realname = config_getvals(b->conf, "realname");
 
-		CMD(b->conn, "NICK", *nick);
+		CMD(b->conn, "NICK", NULL, *nick);
 		char name[64]; *name=0;
 		concat(name, 5, *nick, " ", *nick, " * :", *realname);
-		CMD(b->conn, "USER", name);
+		CMD(b->conn, "USER", NULL, name);
 
 		return 0;
 	}
@@ -65,36 +67,44 @@ int bot_execcmd(struct bot* b, char* msg)
 	if(p)
 	{
 		*p=0;
-		CMD(b->conn, msg, ++p);
+		CMD(b->conn, msg, NULL, ++p);
 		//printf("CMD: %s, TOKEN: %s\n", msg, p);
 		return 0;	
 	}
 	return -1;
 }
 
-int bot_parsecmd(char* in, char* user, char* cmd, char* msg)
+int bot_parsecmd(char* in, char* host, char* nick, char* cmd, char* channel, char* msg)
 {
-	/* TODO: Maybe get rid of strstr:s? */
 	if(in[0]!=':') return -1;
 
-	char* start = strstr(in, ":");
-	char* end = strstr(++start, ":");
-	if(start && end)
-	{
-		end++[-1]=0; // Null-terminate prefix.
+	// Input strings are in following form:
+	// :user!~indent@host COMMAND NICK/CHANNEL :message
+	char* data_end=in+1; // Skip the first ':'
+	while(*data_end!=':') ++data_end;
+	strcpy(msg, data_end+1); // The message data.
+	
+	// Parse other data with pointers limit and in.
+	char* limit=in+1;
+	
+	while(*limit!=' ' && limit!=data_end) ++limit; *limit=0; ++limit;
+	strcpy(host, in+1);
+	in=limit;
 
-		char* token = strtok(start, " ");
-		strcpy(user, token);
+	char* tmp = host;
+	char* hostlen=host+strlen(host);
+	while(*tmp!='!' && tmp<hostlen) ++tmp;
+	if(tmp<hostlen) strncpy(nick, host, tmp-host); // The nick part
+	
+	while(*limit!=' ' && limit!=data_end) ++limit; *limit=0; ++limit;
+	strcpy(cmd, in);
+	in=limit;
 
-		token = strtok(NULL, " ");
-		strcpy(cmd, token);
+	while(*limit!=' ' && limit!=data_end) ++limit; *limit=0; ++limit;
+	strcpy(channel, in);
+	in=limit;
 
-		strcpy(msg, end);
-
-		*in=0;
-		return 0;
-	}
-	else return -1;
+	return 0;
 }
 
 int bot_pingpong(struct bot* b, char* msg)
@@ -126,16 +136,72 @@ void bot_parsemsg(struct bot* b, char* msg)
 		/*
 		 * TODO: Adjust sizes to something less stupid.
 		 */
-		char user[256];
+		char host[256];
+		char nick[64];
 		char cmd[256];
-		char message[256];
+		char channel[256];
+		char message[2048];
 
-		if(bot_parsecmd(msg, user, cmd, message)==0)
+		if(bot_parsecmd(msg, host, nick, cmd, channel, message)==0)
 		{
-			printf("USER: %s\nCMD: %s\nMSG: %s\n", user, cmd, message);
-			if(strcmp(cmd, "PRIVMSG")==0) bot_execcmd(b, message);
+			printf("HOST: %s\nNICK: %s\nCMD: %s\nCHANNEL: %s\nMSG: %s\n", host, nick, cmd, channel, message);
+			if(strcmp(cmd, "PRIVMSG")==0)
+			{
+				int allowedtoexec=0;
+
+				const char** authedusers = config_getvals(b->conf, "authorized_users");
+				if(!*authedusers[0] && strcmp(message, "iamyourfather")==0)
+				{
+					#ifdef DEBUG
+						printf("Checking authed users.\n");
+					#endif
+					config_add(b->conf, "authorized_users", host);
+					CMD(b->conn, "PRIVMSG", nick, "Admin user added.");
+					allowedtoexec=1;
+				}
+
+				for(int i=0; authedusers[i]; ++i)
+				{
+					if(strcmp(host, authedusers[i])==0)
+					{
+						allowedtoexec=1;
+						break;
+					}
+				}
+
+				#ifdef DEBUG
+					printf("Allowed to exec: %d\n", allowedtoexec);
+				#endif
+				if(allowedtoexec)
+				{
+					if(is_cbotcommand(message)==0)
+					{
+						char* ccmd = message+6;
+
+						if(strcmp(ccmd, "DIE")==0)
+						{
+							printf("Dying...\n");
+							CMD(b->conn, cmd, NULL, "EXIT CBOT is dying.");
+							globalkill=1;
+							return;
+						}
+						else if(strncmp(ccmd, "join", 4)==0)
+						{
+							CMD(b->conn, "JOIN", NULL, ccmd+4);
+						}
+						else CMD(b->conn, cmd, NULL, ccmd);
+					}
+				}
+				else CMD(b->conn, "PRIVMSG", nick, "Access denied!");
+				//bot_execcmd(b, message);
+			}
 		}
 	}
+}
+
+int is_cbotcommand(const char* msg)
+{
+	return strncmp(msg, "!CBOT", 5);
 }
 
 int bot_work(struct bot* b)
@@ -148,5 +214,7 @@ int bot_work(struct bot* b)
 			bot_parsemsg(b, msg);
 			msg=strtok(NULL, "\n");
 		}
+
+		if(globalkill) return 1;
 		return 0;
 }

@@ -17,9 +17,10 @@ int	bot_destroy(struct bot* b);
 
 int 	bot_pingpong(struct bot* b, char* msg);
 int 	bot_execcmd(struct bot* b, char* msg);
-int 	bot_parsecmd(char* in, char* user, char* cmd, char* msg);
+int 	bot_parsecmd(char* in, char* host, char* nick, char* cmd, char* channel, char* msg);
 
 void	bot_parsemsg(struct bot* b, char* msg);
+int	is_cbotcommand(const char* msg);
 
 int	bot_work(struct bot* b);
 
