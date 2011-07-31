@@ -8,12 +8,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-struct config
+typedef struct config
 {
 	int		entries;
 	char**		variables;
 	char***		values;
-};
+} conf_t;
 
 /*
  * config_create()
@@ -22,7 +22,7 @@ struct config
  * @return 0 if succeeded.
  * 	  -1 if failed.
  */
-int		config_create(struct config* c);
+int		config_create(conf_t* c);
 
 /*
  * config_destroy()
@@ -31,7 +31,7 @@ int		config_create(struct config* c);
  * @return 0 if succeeded.
  * 	  -1 if failed.
  */
-int		config_destroy(struct config* c);
+int		config_destroy(conf_t* c);
 
 /*
  * config_getvals()
@@ -39,7 +39,7 @@ int		config_destroy(struct config* c);
  * @return char** array with values under 'variable' in config.
  *         NULL if no 'variable' found.
  */
-const char** 	config_getvals(struct config* c, const char* variable);
+const char** 	config_getvals(conf_t* c, const char* variable);
 
 /*
  * config_write()
@@ -48,7 +48,7 @@ const char** 	config_getvals(struct config* c, const char* variable);
  * @return 0 if succeeded.
  * 	  -1 if failed.
  */
-int		config_write(struct config *c, const char* to);
+int		config_write(conf_t *c, const char* to);
 
 /*
  * config_addmultiple()
@@ -59,7 +59,7 @@ int		config_write(struct config *c, const char* to);
  * @return 0 if succeeded.
  * 	  -1 if failed.
  */
-int		config_addmultiple(struct config* c, const char* variable, char** values);
+int		config_addmultiple(conf_t* c, const char* variable, char** values);
 
 /*
  * config_add()
@@ -68,7 +68,7 @@ int		config_addmultiple(struct config* c, const char* variable, char** values);
  * @return 0 if succeeded.
  * 	  -1 if failed.
  */
-int		config_add(struct config* c, const char* variable, const char* value);
+int		config_add(conf_t* c, const char* variable, const char* value);
 
 /*
  * config_delvar()
@@ -77,7 +77,7 @@ int		config_add(struct config* c, const char* variable, const char* value);
  * @return 0 if succeeded
  * 	   1 if no 'variable' found.
  */
-int		config_delvar(struct config* c, const char* variable);
+int		config_delvar(conf_t* c, const char* variable);
 
 /*
  * config_delval()
@@ -86,7 +86,7 @@ int		config_delvar(struct config* c, const char* variable);
  * @return 0 if succeeded
  * 	   1 if no 'value' or 'variable' found.
  */
-int		config_delval(struct config* c, const char* variable, const char* value);
+int		config_delval(conf_t* c, const char* variable, const char* value);
 
 /*
  * config_delvals()
@@ -96,5 +96,5 @@ int		config_delval(struct config* c, const char* variable, const char* value);
  * @return 0 if succeeded
  * 	   1 if not a single 'value' or 'variable' found.
  */
-int		config_delvals(struct config* c, const char* variable, const char** values);
+int		config_delvals(conf_t* c, const char* variable, const char** values);
 #endif

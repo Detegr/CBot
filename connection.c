@@ -8,14 +8,14 @@
 
 extern struct config conf;
 
-void conn_create(struct connection* c)
+void conn_create(conn_t* c)
 {
 	c->socketfd=0;
 	c->host=NULL;
 	c->initialized=0;
 }
 
-void conn_destroy(struct connection* c)
+void conn_destroy(conn_t* c)
 {
 	if(c->initialized)
 	{
@@ -24,7 +24,7 @@ void conn_destroy(struct connection* c)
 	}
 }
 
-int conn_connect(struct connection* c, const char* server, unsigned int port)
+int conn_connect(conn_t* c, const char* server, unsigned int port)
 {
 	c->socketfd = socket(AF_INET, SOCK_STREAM, 0);	
 	c->host = gethostbyname(server);
@@ -57,7 +57,7 @@ int conn_connect(struct connection* c, const char* server, unsigned int port)
 	return 0;
 }
 
-void conn_read(struct connection* c, char* to)
+void conn_read(conn_t* c, char* to)
 {
 	char buf[4096];
 	memset(buf, 0, sizeof(buf)); // Clear buffer just in case.
@@ -69,7 +69,7 @@ void conn_read(struct connection* c, char* to)
 	strcpy(to, buf);
 }
 
-void CMD(struct connection* c, const char* cmd, const char* channel, const char* msg)
+void CMD(conn_t* c, const char* cmd, const char* channel, const char* msg)
 {
 	int slen=strlen(msg);
 	int cmdlen=strlen(cmd);
@@ -87,7 +87,7 @@ void CMD(struct connection* c, const char* cmd, const char* channel, const char*
 	MSG(c, tmp);
 }
 
-void MSG(struct connection* c, const char* msg)
+void MSG(conn_t* c, const char* msg)
 {
 	int len = strlen(msg);
 	char tmp[len+2];

@@ -1,16 +1,16 @@
 #include "bot.h"
 #include "utils.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 extern int globalkill;
 
-int bot_create(struct bot* b, struct config* cfg, struct connection* c)
+int bot_create(struct bot* b)
 {
-	b->conf = cfg;
-	b->conn = c;
-
-	// TODO: Check config?
-
+	b->conn = (conn_t*)malloc(sizeof(conn_t));
+	b->conf = (conf_t*)malloc(sizeof(conf_t));
+	conn_create(b->conn);
+	config_create(b->conf);
 	return 0;
 }
 
@@ -37,7 +37,10 @@ int bot_connect(struct bot* b, const char* server, unsigned int port)
 
 int bot_disconnect(struct bot* b)
 {
-	return -1;
+	printf("Dying...\n");
+	CMD(b->conn, "PRIVMSG", NULL, "EXIT CBOT is dying.");
+	globalkill=1;
+	return 0;
 }
 
 int bot_destroy(struct bot* b)
@@ -45,6 +48,8 @@ int bot_destroy(struct bot* b)
 	config_write(b->conf, "config.conf");
 	conn_destroy(b->conn);
 	config_destroy(b->conf);
+	free(b->conn);
+	free(b->conf);
 	b->conn=NULL;
 	b->conf=NULL;
 	if(!b->conn && !b->conf) return 0;
@@ -180,9 +185,7 @@ void bot_parsemsg(struct bot* b, char* msg)
 
 						if(strcmp(ccmd, "DIE")==0)
 						{
-							printf("Dying...\n");
-							CMD(b->conn, cmd, NULL, "EXIT CBOT is dying.");
-							globalkill=1;
+							bot_disconnect(b);
 							return;
 						}
 						else if(strncmp(ccmd, "join", 4)==0)

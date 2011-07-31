@@ -10,14 +10,9 @@ int globalkill=0;
 
 int main()
 {
-	struct config cfg;
-	struct connection c;
 	struct bot b;
 
-	config_create(&cfg);
-	conn_create(&c);
-
-	if(bot_create(&b, &cfg, &c)==0)
+	if(bot_create(&b)==0)
 	{
 		if(bot_connect(&b, "irc.quakenet.org", 6667)==0)
 		{

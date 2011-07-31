@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int config_create(struct config* c)
+int config_create(conf_t* c)
 {
 	FILE* fp = fopen("config.conf", "r");
 	if(!fp)
@@ -157,7 +157,7 @@ int config_create(struct config* c)
 	}
 }
 
-int config_write(struct config* c, const char* to)
+int config_write(conf_t* c, const char* to)
 {
 	FILE* fp = fopen(to, "w");
 	if(fp)
@@ -187,13 +187,13 @@ int config_write(struct config* c, const char* to)
 	}
 }
 
-int config_add(struct config* c, const char* variable, const char* value)
+int config_add(conf_t* c, const char* variable, const char* value)
 {
 	const char* values[2]={value, 0};
 	return config_addmultiple(c, variable, (char**)values);
 }
 
-int config_addmultiple(struct config* c, const char* variable, char** values)
+int config_addmultiple(conf_t* c, const char* variable, char** values)
 {
 	// Check if variable exists.
 	int index=-1;
@@ -287,7 +287,7 @@ int config_addmultiple(struct config* c, const char* variable, char** values)
 	else return -1;
 }
 
-int config_delvar(struct config* c, const char* variable)
+int config_delvar(conf_t* c, const char* variable)
 {
 	for(int i=0; i<c->entries; ++i)
 	{
@@ -313,7 +313,7 @@ int config_delvar(struct config* c, const char* variable)
 	return 1;
 }
 
-int config_delval(struct config* c, const char* variable, const char* value)
+int config_delval(conf_t* c, const char* variable, const char* value)
 {
 	for(int i=0; i<c->entries; ++i)
 	{
@@ -336,7 +336,7 @@ int config_delval(struct config* c, const char* variable, const char* value)
 	return 1;
 }
 
-int config_delvals(struct config* c, const char* variable, const char** values)
+int config_delvals(conf_t* c, const char* variable, const char** values)
 {
 	int ret=1;
 	for(int i=0; i<c->entries; ++i)
@@ -363,7 +363,7 @@ int config_delvals(struct config* c, const char* variable, const char** values)
 	return ret;
 }
 
-const char** config_getvals(struct config* c, const char* variable)
+const char** config_getvals(conf_t* c, const char* variable)
 {
 	for(int i=0; i<c->entries; ++i)
 	{
@@ -375,7 +375,7 @@ const char** config_getvals(struct config* c, const char* variable)
 	return NULL;
 }
 
-int config_destroy(struct config* c)
+int config_destroy(conf_t* c)
 {
 	for(int i=0;i<c->entries;++i)
 	{
