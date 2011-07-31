@@ -6,8 +6,6 @@
 #include "utils.h"
 #include "config.h"
 
-extern struct config conf;
-
 void conn_create(conn_t* c)
 {
 	c->socketfd=0;
@@ -60,13 +58,13 @@ int conn_connect(conn_t* c, const char* server, unsigned int port)
 void conn_read(conn_t* c, char* to)
 {
 	char buf[4096];
-	memset(buf, 0, sizeof(buf)); // Clear buffer just in case.
 	int n = recv(c->socketfd, buf, sizeof(buf), 0);
 	if(n<0) perror("Read");
 
 	// Get rid of \r\n line endings.
-	for(unsigned int i=0; i<sizeof(buf); ++i) if(buf[i]=='\r' && buf[i+1]=='\n') buf[i]='\n';
-	strcpy(to, buf);
+	for(int i=0; i<n; ++i) if(buf[i]=='\r' && buf[i+1]=='\n') buf[i]='\n';
+	strncpy(to, buf, n);
+	buf[n]=0;
 }
 
 void CMD(conn_t* c, const char* cmd, const char* channel, const char* msg)

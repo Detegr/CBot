@@ -41,7 +41,7 @@ int config_create(conf_t* c)
 		filesize = ftell(fp);
 		rewind(fp);
 
-		buf=(char*)malloc(filesize*sizeof(char));
+		buf=(char*)calloc(filesize+1, sizeof(char));
 		buf_fallback=buf;
 		if(!buf)
 		{

@@ -99,7 +99,7 @@ int bot_parsecmd(char* in, char* host, char* nick, char* cmd, char* channel, cha
 	char* tmp = host;
 	char* hostlen=host+strlen(host);
 	while(*tmp!='!' && tmp<hostlen) ++tmp;
-	if(tmp<hostlen) strncpy(nick, host, tmp-host); // The nick part
+	if(tmp<hostlen) { strncpy(nick, host, tmp-host); nick[tmp-host]=0; } // The nick part
 	
 	while(*limit!=' ' && limit!=data_end) ++limit; *limit=0; ++limit;
 	strcpy(cmd, in);
@@ -144,8 +144,8 @@ void bot_parsemsg(struct bot* b, char* msg)
 		char host[256];
 		char nick[64];
 		char cmd[256];
-		char channel[256];
-		char message[2048];
+		char channel[64];
+		char message[512];
 
 		if(bot_parsecmd(msg, host, nick, cmd, channel, message)==0)
 		{
