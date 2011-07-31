@@ -211,13 +211,27 @@ int bot_work(struct bot* b)
 {
 		char buf[4096];
 		conn_read(b->conn, buf);
-		char* msg = strtok(buf, "\n");
-		while(msg)
+		char* tmp = buf;
+		char* msg = buf;
+		while(1)
 		{
-			bot_parsemsg(b, msg);
-			msg=strtok(NULL, "\n");
+			while(*tmp!='\n')
+			{
+				++tmp;
+				if(!(*tmp)) break;
+			}
+			if(*tmp)
+			{
+				*tmp=0;
+				bot_parsemsg(b, msg);
+				msg=++tmp;
+			}
+			else
+			{
+				bot_parsemsg(b, msg);
+				break;
+			}
 		}
-
 		if(globalkill) return 1;
 		return 0;
 }

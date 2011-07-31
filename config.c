@@ -36,7 +36,7 @@ int config_create(conf_t* c)
 	{
 		char* buf;
 		char* buf_fallback;
-		long filesize;
+		unsigned long filesize;
 		fseek(fp, 0, SEEK_END);
 		filesize = ftell(fp);
 		rewind(fp);
