@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "config.h"
 #include "bot.h"
+#include "module.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,6 +11,10 @@ int globalkill=0;
 
 int main()
 {
+	struct python_module p;
+	memset(&p, 0, sizeof(p));
+	python_module_call(&p, "unicafe.py", "unicafe");
+	/*
 	struct bot b;
 
 	if(bot_create(&b)==0)
@@ -30,4 +35,5 @@ int main()
 		printf("Failed to exit CBOT.");
 		exit(EXIT_FAILURE);
 	}
+	*/
 }
