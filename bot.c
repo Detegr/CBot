@@ -1,7 +1,9 @@
 #include "bot.h"
 #include "utils.h"
+#include "module.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 extern int globalkill;
 
@@ -177,7 +179,7 @@ void bot_parsemsg(struct bot* b, char* msg)
 				#ifdef DEBUG
 					printf("Allowed to exec: %d\n", allowedtoexec);
 				#endif
-				if(allowedtoexec)
+				if(allowedtoexec && is_publiccommand(message)!=0)
 				{
 					if(is_cbotcommand(message)==0)
 					{
@@ -195,6 +197,30 @@ void bot_parsemsg(struct bot* b, char* msg)
 						else CMD(b->conn, cmd, NULL, ccmd);
 					}
 				}
+				else if(is_publiccommand(message)==0)
+				{
+					if(strcmp(message, "!unicafe")==0)
+					{
+						#ifdef CBOT_PYTHON
+							struct python_module p;
+							memset(&p, 0, sizeof(p));
+							char* p1=(char*)python_module_call(&p, "unicafe.py", "unicafe");
+							char* p2=p1;
+							int i=0;
+							int len=strlen(p1);
+							while(i<len)
+							{
+								while(*p2!='\n'){++p2;++i;}
+								*p2=0; ++p2; ++i;
+								CMD(b->conn, "PRIVMSG", channel, p1);
+								p1=p2;
+								sleep(1);
+							}
+						#else
+							fprintf(stderr, "Python module is not compiled.\n");
+						#endif
+					}
+				}
 				else CMD(b->conn, "PRIVMSG", nick, "Access denied!");
 				//bot_execcmd(b, message);
 			}
@@ -205,6 +231,14 @@ void bot_parsemsg(struct bot* b, char* msg)
 int is_cbotcommand(const char* msg)
 {
 	return strncmp(msg, "!CBOT", 5);
+}
+
+int is_publiccommand(const char* msg)
+{
+	static char* publiccommands[]={"!unicafe", 0};
+
+	for(int i=0; publiccommands[i]; ++i) {if(strcmp(msg, publiccommands[i])==0) return 0;}
+	return -1;
 }
 
 int bot_work(struct bot* b)

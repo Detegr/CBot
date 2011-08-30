@@ -9,7 +9,7 @@ struct python_module
 };
 
 void python_module_init();
-void python_module_call(struct python_module* p, const char* script, const char* func);
+const char* python_module_call(struct python_module* p, const char* script, const char* func);
 #endif
 
 #endif

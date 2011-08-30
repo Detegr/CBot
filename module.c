@@ -7,8 +7,9 @@ void python_module_init()
 	Py_Initialize();
 }
 
-void python_module_call(struct python_module* p, const char* script, const char* func)
+const char* python_module_call(struct python_module* p, const char* script, const char* func)
 {
+	const char* ret=NULL;
 	python_module_init();
 	
 	FILE* f=fopen(script, "r");
@@ -29,7 +30,7 @@ void python_module_call(struct python_module* p, const char* script, const char*
 			p->pValue=PyObject_CallObject(p->pFunc, p->pArgs);
 			if(p->pValue)
 			{
-				printf("Returned: %s\n", PyString_AsString(p->pValue));
+				ret=PyString_AsString(p->pValue);
 				Py_DECREF(p->pValue);
 			}
 			else
@@ -53,4 +54,6 @@ void python_module_call(struct python_module* p, const char* script, const char*
 		fprintf(stderr, "Failed to load %s\n", script);
 	}
 	Py_Finalize();
+	
+	return ret;
 }

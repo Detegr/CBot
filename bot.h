@@ -21,6 +21,7 @@ int 	bot_parsecmd(char* in, char* host, char* nick, char* cmd, char* channel, ch
 
 void	bot_parsemsg(struct bot* b, char* msg);
 int	is_cbotcommand(const char* msg);
+int	is_publiccommand(const char* msg);
 
 int	bot_work(struct bot* b);
 
