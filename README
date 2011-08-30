@@ -6,9 +6,8 @@ Features:
 	- !CBOT -prefixed commands:
 		* DIE  		 - Peacefully kills the bot.
 		* join <channel> - Joins to a channel.
-		
 	- If given command without !CBOT prefix, executes it as a raw irc-protocol command.
-
+	- Simple python module that runs python scripts that take no arguments and return a string.
 
 License:
 All the code is licensed under WTFPL: http://sam.zoy.org/wtfpl/
