@@ -221,7 +221,7 @@ void bot_parsemsg(struct bot* b, char* msg)
 						#endif
 					}
 				}
-				else CMD(b->conn, "PRIVMSG", nick, "Access denied!");
+				else if(strcmp(channel, *config_getvals(b->conf, "nick"))==0 && !allowedtoexec) CMD(b->conn, "PRIVMSG", nick, "Access denied!");
 				//bot_execcmd(b, message);
 			}
 		}
